@@ -7,7 +7,6 @@ const api = axios.create({
   }
 });
 
-// Interceptor para agregar el token a todas las peticiones
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -17,7 +16,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para manejar respuestas
 api.interceptors.response.use(
   (response) => {
     console.log('Respuesta:', response.data); // Para debug
