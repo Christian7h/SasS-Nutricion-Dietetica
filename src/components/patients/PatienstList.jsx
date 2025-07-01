@@ -57,7 +57,7 @@ export default function PatientList() {
                 <tr key={patient._id}>
                   <td className="font-medium">{patient.name}</td>
                   <td>{patient.email}</td>
-                  <td>{patient.phone}</td>
+                  <td>{patient.profile.phone}</td>
                   <td>
                     <span className="badge badge-success">Activo</span>
                   </td>

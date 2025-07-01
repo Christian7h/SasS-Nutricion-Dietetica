@@ -22,16 +22,16 @@ export default function AppointmentList() {
           <table className="min-w-full divide-y divide-gray-300">
             <thead>
               <tr>
-                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
+                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-primary">
                   Paciente
                 </th>
-                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-primary">
                   Fecha
                 </th>
-                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-primary">
                   Hora
                 </th>
-                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-primary">
                   Estado
                 </th>
               </tr>
@@ -39,7 +39,7 @@ export default function AppointmentList() {
             <tbody className="divide-y divide-gray-200">
               {appointments?.map((appointment) => (
                 <tr key={appointment._id}>
-                  <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                  <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-accent">
                     {appointment.patientId.name}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
