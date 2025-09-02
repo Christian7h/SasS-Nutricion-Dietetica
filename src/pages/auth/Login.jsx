@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+
 export default function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const { login } = useAuth();
@@ -64,7 +65,15 @@ export default function Login() {
           >
             Iniciar sesión
           </button>
-          
+
+          <div className="text-center">
+            <p className="text-sm text-base-content">
+              ¿No tienes cuenta?{" "}
+              <Link to="/register" className="link link-accent">
+                Regístrate
+              </Link>
+            </p>
+          </div>
         </form>
       </div>
     </div>

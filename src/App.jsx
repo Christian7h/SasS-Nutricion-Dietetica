@@ -9,6 +9,7 @@ import Appointments from './pages/appointments/Appointments';
 import Patients from './pages/patients/Patients';
 import Plans from './pages/plans/Plans';
 import Profile from './pages/profile/Profile';
+import Landing from './pages/landing/Landing';
 import { useThemeStore } from "./hooks/useThemeStore";
 
 const queryClient = new QueryClient({
@@ -28,6 +29,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={

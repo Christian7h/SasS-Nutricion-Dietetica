@@ -1,155 +1,270 @@
-import { Dialog } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
+import { XMarkIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/axios';
+import Input from '../common/Input';
+import Button from '../common/Button';
+import Alert from '../common/Alert';
+import { useState } from 'react';
+import { usePatientReport } from '../../hooks/usePatientReport';
 
 export default function PatientModal({ isOpen, onClose, patient = null }) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
-    defaultValues: patient || {}
-  });
-  
+  const [error, setError] = useState('');
   const queryClient = useQueryClient();
+  const { generateReport, loading: reportLoading } = usePatientReport();
 
-  const createPatient = useMutation({
-    mutationFn: (data) => api.post('/patients', data),
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    defaultValues: patient || {
+      name: '',
+      email: '',
+      phone: '',
+      birthDate: '',
+      gender: '',
+      height: '',
+      weight: '',
+      medicalHistory: '',
+      allergies: '',
+      goals: ''
+    }
+  });
+
+  const mutation = useMutation({
+    mutationFn: (data) => {
+      if (patient) {
+        return api.put(`/patients/${patient.id}`, data);
+      }
+      return api.post('/patients', data);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries(['patients']);
       reset();
       onClose();
+    },
+    onError: (error) => {
+      setError(error.response?.data?.message || 'Error al procesar el paciente');
     }
   });
 
   const onSubmit = (data) => {
-    createPatient.mutate({
-      ...data,
-      role: 'patient'
-    });
+    setError('');
+    mutation.mutate(data);
+  };
+
+  const handleClose = () => {
+    reset();
+    setError('');
+    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+    <Transition.Root show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
+        </Transition.Child>
 
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="modal-box w-full max-w-md">
-          <div className="absolute right-4 top-4">
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm btn-circle"
-              onClick={onClose}
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
             >
-              <XMarkIcon className="h-6 w-6" />
-            </button>
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
+                <div className="flex items-center justify-between mb-6">
+                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-base-content">
+                    {patient ? 'Editar Paciente' : 'Nuevo Paciente'}
+                  </Dialog.Title>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm btn-circle"
+                    onClick={handleClose}
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {error && <Alert type="error" message={error} />}
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label="Nombre completo"
+                      {...register('name', { required: 'El nombre es requerido' })}
+                      error={errors.name?.message}
+                      placeholder="Nombre del paciente"
+                    />
+
+                    <Input
+                      label="Correo electrónico"
+                      type="email"
+                      {...register('email', { 
+                        required: 'El correo es requerido',
+                        pattern: {
+                          value: /^\S+@\S+$/i,
+                          message: 'Correo electrónico inválido'
+                        }
+                      })}
+                      error={errors.email?.message}
+                      placeholder="ejemplo@correo.com"
+                    />
+
+                    <Input
+                      label="Teléfono"
+                      type="tel"
+                      {...register('phone', { required: 'El teléfono es requerido' })}
+                      error={errors.phone?.message}
+                      placeholder="+1 234 567 8900"
+                    />
+
+                    <Input
+                      label="Fecha de nacimiento"
+                      type="date"
+                      {...register('birthDate', { required: 'La fecha de nacimiento es requerida' })}
+                      error={errors.birthDate?.message}
+                    />
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text text-base-content">Género</span>
+                      </label>
+                      <select
+                        {...register('gender', { required: 'Selecciona el género' })}
+                        className="select select-bordered w-full"
+                      >
+                        <option value="">Seleccionar género</option>
+                        <option value="male">Masculino</option>
+                        <option value="female">Femenino</option>
+                        <option value="other">Otro</option>
+                      </select>
+                      {errors.gender && (
+                        <label className="label">
+                          <span className="label-text-alt text-error">{errors.gender.message}</span>
+                        </label>
+                      )}
+                    </div>
+
+                    <Input
+                      label="Altura (cm)"
+                      type="number"
+                      {...register('height', { 
+                        required: 'La altura es requerida',
+                        min: { value: 50, message: 'Altura mínima 50cm' },
+                        max: { value: 250, message: 'Altura máxima 250cm' }
+                      })}
+                      error={errors.height?.message}
+                      placeholder="170"
+                    />
+
+                    <Input
+                      label="Peso (kg)"
+                      type="number"
+                      step="0.1"
+                      {...register('weight', { 
+                        required: 'El peso es requerido',
+                        min: { value: 20, message: 'Peso mínimo 20kg' },
+                        max: { value: 300, message: 'Peso máximo 300kg' }
+                      })}
+                      error={errors.weight?.message}
+                      placeholder="70.5"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text text-base-content">Historial médico</span>
+                      </label>
+                      <textarea
+                        {...register('medicalHistory')}
+                        className="textarea textarea-bordered h-24"
+                        placeholder="Enfermedades, cirugías, medicamentos actuales..."
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text text-base-content">Alergias</span>
+                      </label>
+                      <textarea
+                        {...register('allergies')}
+                        className="textarea textarea-bordered h-20"
+                        placeholder="Alergias alimentarias o de otro tipo..."
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text text-base-content">Objetivos</span>
+                      </label>
+                      <textarea
+                        {...register('goals')}
+                        className="textarea textarea-bordered h-20"
+                        placeholder="Perder peso, ganar masa muscular, mejorar salud..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between">
+                    {/* Botones de descarga solo si es un paciente existente */}
+                    {patient && (
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => generateReport({ patientId: patient._id, format: 'txt' })}
+                          loading={reportLoading}
+                          type="button"
+                        >
+                          <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
+                          TXT
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => generateReport({ patientId: patient._id, format: 'html' })}
+                          loading={reportLoading}
+                          type="button"
+                        >
+                          <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
+                          HTML
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <div className="flex space-x-3 ml-auto">
+                      <Button variant="ghost" onClick={handleClose} type="button">
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        loading={mutation.isPending}
+                        variant="primary"
+                      >
+                        {patient ? 'Actualizar' : 'Crear'} Paciente
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              </Dialog.Panel>
+            </Transition.Child>
           </div>
-
-          <Dialog.Title as="h3" className="text-lg font-medium">
-            {patient ? 'Editar Paciente' : 'Nuevo Paciente'}
-          </Dialog.Title>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
-            <div className="space-y-4">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Nombre completo</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej: Juan Pérez García"
-                  {...register('name', { required: 'El nombre es requerido' })}
-                  className="input input-bordered w-full"
-                />
-                {errors.name && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">{errors.name.message}</span>
-                  </label>
-                )}
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Email</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="ejemplo@correo.com"
-                  {...register('email', { 
-                    required: 'El email es requerido',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Email inválido'
-                    }
-                  })}
-                  className="input input-bordered w-full"
-                />
-                {errors.email && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">{errors.email.message}</span>
-                  </label>
-                )}
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Teléfono</span>
-                </label>
-                <input
-                  type="tel"
-                  placeholder="Ej: +34 612 345 678"
-                  {...register('phone', { required: 'El teléfono es requerido' })}
-                  className="input input-bordered w-full"
-                />
-                {errors.phone && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">{errors.phone.message}</span>
-                  </label>
-                )}
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Fecha de nacimiento</span>
-                </label>
-                <input
-                  type="date"
-                  placeholder="DD/MM/AAAA"
-                  {...register('birthDate')}
-                  className="input input-bordered w-full"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Notas médicas</span>
-                </label>
-                <textarea
-                  placeholder="Ingrese aquí cualquier nota relevante sobre el paciente (alergias, condiciones médicas, etc.)"
-                  {...register('medicalNotes')}
-                  rows={3}
-                  className="textarea textarea-bordered w-full"
-                />
-              </div>
-
-              <div className="modal-action">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="btn btn-ghost"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={createPatient.isPending}
-                  className="btn btn-primary"
-                >
-                  {createPatient.isPending ? 'Guardando...' : 'Guardar'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </Dialog.Panel>
-      </div>
-    </Dialog>
+        </div>
+      </Dialog>
+    </Transition.Root>
   );
 }
