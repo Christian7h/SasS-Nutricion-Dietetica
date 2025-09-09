@@ -18,6 +18,8 @@ export default function Modal({
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
+    '4xl': 'max-w-4xl',
+    '6xl': 'max-w-6xl',
     full: 'max-w-7xl'
   };
 

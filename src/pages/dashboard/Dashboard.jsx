@@ -5,7 +5,8 @@ import {
   UserGroupIcon,
   CalendarIcon,
   ChartBarIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  VideoCameraIcon
 } from '@heroicons/react/24/outline';
 import Layout from '../../components/layout/Layout';
 import Loading from '../../components/common/Loading';
@@ -19,6 +20,7 @@ export default function Dashboard() {
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const { data } = await api.get('/stats/dashboard');
+      console.log("dashboard data:", data);
       return data.stats;
     }
   });
@@ -77,7 +79,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-3">
           {/* Próximas Citas */}
           <Card>
             <CardBody>
@@ -129,6 +131,93 @@ export default function Dashboard() {
               </div>
             </CardBody>
           </Card>
+
+          {/* Enlaces de Google Meet */}
+          <Card>
+            <CardBody>
+              <CardTitle>Enlaces de Google Meet</CardTitle>
+              <div className="space-y-4 mt-4">
+                {statsData?.googleMeetLinks?.length > 0 ? (
+                  statsData.googleMeetLinks.map((meetLink, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <VideoCameraIcon className="h-5 w-5 text-primary" />
+                        <span className="text-sm font-medium text-base-content">
+                          Reunión {index + 1}
+                        </span>
+                      </div>
+                      <a
+                        href={meetLink.googleMeetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-sm btn-primary"
+                      >
+                        <VideoCameraIcon className="h-4 w-4 mr-1" />
+                        Unirse
+                      </a>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <VideoCameraIcon className="mx-auto h-12 w-12 text-base-content/40" />
+                    <h3 className="mt-2 text-sm font-medium text-base-content">No hay enlaces de Meet</h3>
+                    <p className="mt-1 text-sm text-base-content/70">Los enlaces aparecerán aquí</p>
+                  </div>
+                )}
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Sección adicional para nutricionistas */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          {/* Alertas de pacientes */}
+          <Card>
+            <CardBody>
+              <CardTitle>Alertas de Pacientes</CardTitle>
+              <div className="space-y-3 mt-4">
+                <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-warning">⚠️</span>
+                    <div>
+                      <p className="text-sm font-medium text-warning">3 pacientes con alergias críticas</p>
+                      <p className="text-xs text-warning/80">Revisar antes de prescribir planes</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3 bg-info/10 border border-info/20 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-info">ℹ️</span>
+                    <div>
+                      <p className="text-sm font-medium text-info">5 pacientes requieren seguimiento</p>
+                      <p className="text-xs text-info/80">Más de 30 días sin visita</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Métricas nutricionales */}
+          <Card>
+            <CardBody>
+              <CardTitle>Métricas Nutricionales</CardTitle>
+              <div className="space-y-4 mt-4">
+                <div className="flex justify-between items-center p-3 bg-base-200 rounded-lg">
+                  <span className="text-sm font-medium">Planes activos</span>
+                  <span className="text-2xl font-bold text-primary">12</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-base-200 rounded-lg">
+                  <span className="text-sm font-medium">Promedio IMC pacientes</span>
+                  <span className="text-2xl font-bold text-secondary">24.2</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-base-200 rounded-lg">
+                  <span className="text-sm font-medium">Pacientes en objetivo</span>
+                  <span className="text-2xl font-bold text-success">8</span>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       </div>
     </Layout>
@@ -161,6 +250,22 @@ function AppointmentItem({ appointment }) {
           {appointment.date ? format(new Date(appointment.date), 'PPP', { locale: es }) : 'Fecha no definida'} 
           {appointment.time && ` - ${appointment.time}`}
         </p>
+        <div className="flex space-x-4 mt-2">
+          <a href={`/appointments/${appointment._id}`} className="text-sm text-blue-500 hover:underline">
+            Ver detalles
+          </a>
+          {appointment.googleMeetLink && (
+            <a 
+              href={appointment.googleMeetLink} 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-green-500 hover:underline flex items-center"
+            >
+              <VideoCameraIcon className="h-4 w-4 mr-1" />
+              Google Meet
+            </a>
+          )}
+        </div>
       </div>
       <Badge variant={statusConfig.variant} size="sm">
         {statusConfig.label}

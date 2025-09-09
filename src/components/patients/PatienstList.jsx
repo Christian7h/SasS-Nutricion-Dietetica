@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { PencilIcon, TrashIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, DocumentArrowDownIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import api from '../../api/axios';
@@ -7,8 +8,10 @@ import Loading from '../common/Loading';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 import { usePatientReport } from '../../hooks/usePatientReport';
+import PatientDetail from './PatientDetail';
 
 export default function PatientList() {
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
   const { generateReport, loading: reportLoading } = usePatientReport();
 
   const { data: patients, isLoading, error } = useQuery({
@@ -90,7 +93,7 @@ export default function PatientList() {
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm text-base-content">
                 <div>{patient.email}</div>
-                <div className="text-base-content/70">{patient.phone || 'Sin teléfono'}</div>
+                <div className="text-base-content/70">{patient.profile.phone || 'Sin teléfono'}</div>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm text-base-content">
                 <div>Altura: {patient.height ? `${patient.height} cm` : 'No especificada'}</div>
@@ -103,6 +106,16 @@ export default function PatientList() {
               </td>
               <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                 <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="btn-circle"
+                    onClick={() => setSelectedPatientId(patient._id)}
+                    title="Ver detalles"
+                  >
+                    <EyeIcon className="h-4 w-4" />
+                  </Button>
+                  
                   <Button variant="ghost" size="sm" className="btn-circle">
                     <PencilIcon className="h-4 w-4" />
                   </Button>
@@ -161,6 +174,13 @@ export default function PatientList() {
           ))}
         </tbody>
       </table>
+      
+      {/* Modal de detalles del paciente */}
+      <PatientDetail
+        patientId={selectedPatientId}
+        isOpen={!!selectedPatientId}
+        onClose={() => setSelectedPatientId(null)}
+      />
     </div>
   );
 }
