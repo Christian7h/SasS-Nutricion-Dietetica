@@ -1,18 +1,25 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PencilIcon, TrashIcon, DocumentArrowDownIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import api from '../../api/axios';
+import { deletePatient } from '../../api/auth';
 import Loading from '../common/Loading';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
+import Modal from '../common/Modal';
 import { usePatientReport } from '../../hooks/usePatientReport';
+import { useNotification } from '../../hooks/useNotification';
 import PatientDetail from './PatientDetail';
 
 export default function PatientList() {
   const [selectedPatientId, setSelectedPatientId] = useState(null);
+  const [patientToDelete, setPatientToDelete] = useState(null);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const { generateReport, loading: reportLoading } = usePatientReport();
+  const queryClient = useQueryClient();
+  const { success, error: showError } = useNotification();
 
   const { data: patients, isLoading, error } = useQuery({
     queryKey: ['patients'],
@@ -21,6 +28,37 @@ export default function PatientList() {
       return data.patients;
     }
   });
+
+  // Mutación para eliminar paciente
+  const deletePatientMutation = useMutation({
+    mutationFn: deletePatient,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['patients']);
+      setShowDeleteAlert(false);
+      setPatientToDelete(null);
+      success(`Paciente ${patientToDelete?.name} eliminado exitosamente`);
+    },
+    onError: (error) => {
+      console.error('Error al eliminar paciente:', error);
+      showError(error.response?.data?.message || 'Error al eliminar el paciente');
+    }
+  });
+
+  const handleDeletePatient = (patient) => {
+    setPatientToDelete(patient);
+    setShowDeleteAlert(true);
+  };
+
+  const confirmDelete = () => {
+    if (patientToDelete) {
+      deletePatientMutation.mutate(patientToDelete._id);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteAlert(false);
+    setPatientToDelete(null);
+  };
 
   const handleDownloadReport = (patientId, format = 'txt') => {
     generateReport({ patientId, format });
@@ -87,7 +125,7 @@ export default function PatientList() {
                   </div>
                   <div className="ml-4">
                     <div className="font-medium text-base-content">{patient.name}</div>
-                    <div className="text-base-content/70">{patient.gender === 'male' ? 'Masculino' : patient.gender === 'female' ? 'Femenino' : 'No especificado'}</div>
+                    <div className="text-base-content/70">{patient.profile?.gender === 'male' ? 'Masculino' : patient.profile?.gender === 'female' ? 'Femenino' : 'No especificado'}</div>
                   </div>
                 </div>
               </td>
@@ -96,8 +134,8 @@ export default function PatientList() {
                 <div className="text-base-content/70">{patient.profile.phone || 'Sin teléfono'}</div>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm text-base-content">
-                <div>Altura: {patient.height ? `${patient.height} cm` : 'No especificada'}</div>
-                <div className="text-base-content/70">Peso: {patient.weight ? `${patient.weight} kg` : 'No especificado'}</div>
+                <div>Altura: {patient.profile?.height ? `${patient.profile.height} cm` : 'No especificada'}</div>
+                <div className="text-base-content/70">Peso: {patient.profile?.weight ? `${patient.profile.weight} kg` : 'No especificado'}</div>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm">
                 <Badge variant="success" size="sm">
@@ -165,7 +203,13 @@ export default function PatientList() {
                     </Transition>
                   </Menu>
 
-                  <Button variant="ghost" size="sm" className="btn-circle text-error hover:bg-error hover:text-error-content">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="btn-circle text-error hover:bg-error hover:text-error-content"
+                    onClick={() => handleDeletePatient(patient)}
+                    title="Eliminar paciente"
+                  >
                     <TrashIcon className="h-4 w-4" />
                   </Button>
                 </div>
@@ -181,6 +225,45 @@ export default function PatientList() {
         isOpen={!!selectedPatientId}
         onClose={() => setSelectedPatientId(null)}
       />
+
+      {/* Alerta de confirmación para eliminar */}
+      <Modal
+        isOpen={showDeleteAlert}
+        onClose={cancelDelete}
+        title="Eliminar Paciente"
+        size="md"
+        footer={
+          <div className="flex space-x-3">
+            <Button
+              variant="ghost"
+              onClick={cancelDelete}
+              disabled={deletePatientMutation.isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="error"
+              onClick={confirmDelete}
+              loading={deletePatientMutation.isLoading}
+            >
+              {deletePatientMutation.isLoading ? 'Eliminando...' : 'Eliminar'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-error/10 mb-4">
+            <TrashIcon className="h-6 w-6 text-error" aria-hidden="true" />
+          </div>
+          <p className="text-base-content">
+            ¿Estás seguro de que deseas eliminar a{' '}
+            <span className="font-semibold">{patientToDelete?.name}</span>?
+          </p>
+          <p className="text-sm text-base-content/70 mt-2">
+            Esta acción no se puede deshacer y se eliminarán todos los datos asociados al paciente.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }

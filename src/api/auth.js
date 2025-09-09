@@ -29,3 +29,9 @@ export const validateToken = async () => {
   const { data } = await api.get('/auth/validate');
   return data;
 };
+
+// Eliminar paciente
+export const deletePatient = async (patientId) => {
+  const { data } = await api.delete(`/patients/${patientId}`);
+  return data;
+};
