@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/axios';
+import * as authAPI from '../api/auth';
 
 const AuthContext = createContext(null);
 
@@ -26,17 +27,28 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (credentials) => {
-    const { data } = await api.post('/auth/login', credentials);
+    const data = await authAPI.login(credentials);
     localStorage.setItem('token', data.token);
     setUser(data.user);
     return data;
   };
 
   const register = async (userData) => {
-    const { data } = await api.post('/auth/register', userData);
+    const data = await authAPI.register(userData);
     localStorage.setItem('token', data.token);
     setUser(data.user);
     return data;
+  };
+
+  const registerPatient = async (patientData) => {
+    const data = await authAPI.registerPatient(patientData);
+    localStorage.setItem('token', data.token);
+    setUser(data.patient);
+    return data;
+  };
+
+  const getAvailableNutritionists = async () => {
+    return await authAPI.getAvailableNutritionists();
   };
 
   const logout = () => {
@@ -45,7 +57,15 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      register, 
+      registerPatient,
+      getAvailableNutritionists,
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
