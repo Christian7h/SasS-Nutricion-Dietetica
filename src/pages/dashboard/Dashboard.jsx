@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -6,16 +7,22 @@ import {
   CalendarIcon,
   ChartBarIcon,
   CheckCircleIcon,
-  VideoCameraIcon
+  VideoCameraIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import Layout from '../../components/layout/Layout';
 import Loading from '../../components/common/Loading';
 import StatCard from '../../components/common/StatCard';
 import Card, { CardBody, CardTitle } from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
+import Button from '../../components/common/Button';
+import AppointmentDetailModal from '../../components/appointments/AppointmentDetailModal';
 import api from '../../api/axios';
 
 export default function Dashboard() {
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
   const { data: statsData, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
@@ -24,6 +31,16 @@ export default function Dashboard() {
       return data.stats;
     }
   });
+
+  const handleViewAppointmentDetails = (appointment) => {
+    setSelectedAppointment(appointment);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedAppointment(null);
+    setIsDetailModalOpen(false);
+  };
 
   if (isLoading) return <Loading />;
 
@@ -87,7 +104,11 @@ export default function Dashboard() {
               <div className="space-y-4 mt-4">
                 {statsData?.recentAppointments?.length > 0 ? (
                   statsData.recentAppointments.map((appointment) => (
-                    <AppointmentItem key={appointment._id} appointment={appointment} />
+                    <AppointmentItem 
+                      key={appointment._id} 
+                      appointment={appointment} 
+                      onViewDetails={handleViewAppointmentDetails}
+                    />
                   ))
                 ) : (
                   <div className="text-center py-8">
@@ -219,12 +240,19 @@ export default function Dashboard() {
             </CardBody>
           </Card>
         </div>
+
+        {/* Modal de detalles de cita */}
+        <AppointmentDetailModal
+          appointment={selectedAppointment}
+          isOpen={isDetailModalOpen}
+          onClose={handleCloseModal}
+        />
       </div>
     </Layout>
   );
 }
 
-function AppointmentItem({ appointment }) {
+function AppointmentItem({ appointment, onViewDetails }) {
   const getStatusConfig = (status) => {
     switch (status) {
       case 'scheduled':
@@ -251,9 +279,13 @@ function AppointmentItem({ appointment }) {
           {appointment.time && ` - ${appointment.time}`}
         </p>
         <div className="flex space-x-4 mt-2">
-          <a href={`/appointments/${appointment._id}`} className="text-sm text-blue-500 hover:underline">
-            Ver detalles
-          </a>
+          <button 
+            onClick={() => onViewDetails(appointment)}
+            className="text-sm text-blue-500 hover:underline flex items-center space-x-1"
+          >
+            <EyeIcon className="w-4 h-4" />
+            <span>Ver detalles</span>
+          </button>
           {appointment.googleMeetLink && (
             <a 
               href={appointment.googleMeetLink} 

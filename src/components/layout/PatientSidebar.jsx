@@ -4,30 +4,28 @@ import {
   XMarkIcon,
   HomeIcon,
   CalendarIcon,
-  UsersIcon,
   ClipboardDocumentListIcon,
   UserIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline';
 import { useLocation, Link } from 'react-router-dom';
-import { usePendingAppointmentsCount } from '../../hooks/usePendingAppointmentsCount';
 
-const navigation = [
-  { name: 'Dashboard', href: '/nutritionist/dashboard', icon: HomeIcon },
-  { name: 'Citas', href: '/appointments', icon: CalendarIcon },
-  { name: 'Pacientes', href: '/patients', icon: UsersIcon },
-  { name: 'Planes', href: '/plans', icon: ClipboardDocumentListIcon },
-  { name: 'Perfil', href: '/profile', icon: UserIcon },
-  { name: 'Reportes', href: '/reports', icon: ChartBarIcon },
+const patientNavigation = [
+  { name: 'Mi Dashboard', href: '/patient/dashboard', icon: HomeIcon },
+  { name: 'Mis Citas', href: '/patient/appointments', icon: CalendarIcon },
+  { name: 'Mi Plan Nutricional', href: '/patient/plan', icon: ClipboardDocumentListIcon },
+  { name: 'Mi Progreso', href: '/patient/progress', icon: ChartBarIcon },
+  { name: 'Mi Salud', href: '/patient/health', icon: HeartIcon },
+  { name: 'Mi Perfil', href: '/patient/profile', icon: UserIcon },
 ];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
+export default function PatientSidebar({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
-  const { data: pendingCount = 0 } = usePendingAppointmentsCount();
 
   return (
     <>
@@ -77,23 +75,23 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-base-100 px-6 pb-4">
                   <div className="flex h-16 shrink-0 items-center">
                     <div className="flex items-center gap-x-3">
-                      <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-                        <span className="text-accent-content font-bold text-lg">N</span>
+                      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <span className="text-primary-content font-bold text-lg">N</span>
                       </div>
-                      <span className="text-xl font-bold text-base-content">NutriPro</span>
+                      <span className="text-xl font-bold text-base-content">Mi Nutrición</span>
                     </div>
                   </div>
                   <nav className="flex flex-1 flex-col">
                     <ul role="list" className="flex flex-1 flex-col gap-y-7">
                       <li>
                         <ul role="list" className="-mx-2 space-y-1">
-                          {navigation.map((item) => (
+                          {patientNavigation.map((item) => (
                             <li key={item.name}>
                               <Link
                                 to={item.href}
                                 className={classNames(
                                   location.pathname === item.href
-                                    ? 'bg-accent text-accent-content'
+                                    ? 'bg-primary text-primary-content'
                                     : 'text-base-content hover:bg-base-200',
                                   'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
                                 )}
@@ -102,18 +100,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                                 <item.icon
                                   className={classNames(
                                     location.pathname === item.href
-                                      ? 'text-accent-content'
+                                      ? 'text-primary-content'
                                       : 'text-base-content/70 group-hover:text-base-content',
                                     'h-6 w-6 shrink-0'
                                   )}
                                   aria-hidden="true"
                                 />
-                                <span className="flex-1">{item.name}</span>
-                                {item.name === 'Citas' && pendingCount > 0 && (
-                                  <span className="bg-warning text-warning-content text-xs font-medium px-2 py-0.5 rounded-full">
-                                    {pendingCount}
-                                  </span>
-                                )}
+                                {item.name}
                               </Link>
                             </li>
                           ))}
@@ -133,23 +126,23 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-base-100 border-r border-base-300 px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
             <div className="flex items-center gap-x-3">
-              <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-                <span className="text-accent-content font-bold text-xl">N</span>
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                <span className="text-primary-content font-bold text-xl">N</span>
               </div>
-              <span className="text-2xl font-bold text-base-content">NutriPro</span>
+              <span className="text-2xl font-bold text-base-content">Mi Nutrición</span>
             </div>
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
-                  {navigation.map((item) => (
+                  {patientNavigation.map((item) => (
                     <li key={item.name}>
                       <Link
                         to={item.href}
                         className={classNames(
                           location.pathname === item.href
-                            ? 'bg-accent text-accent-content'
+                            ? 'bg-primary text-primary-content'
                             : 'text-base-content hover:bg-base-200',
                           'group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-semibold transition-colors'
                         )}
@@ -157,18 +150,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         <item.icon
                           className={classNames(
                             location.pathname === item.href
-                              ? 'text-accent-content'
+                              ? 'text-primary-content'
                               : 'text-base-content/70 group-hover:text-base-content',
                             'h-6 w-6 shrink-0'
                           )}
                           aria-hidden="true"
                         />
-                        <span className="flex-1">{item.name}</span>
-                        {item.name === 'Citas' && pendingCount > 0 && (
-                          <span className="bg-warning text-warning-content text-xs font-medium px-2 py-0.5 rounded-full">
-                            {pendingCount}
-                          </span>
-                        )}
+                        {item.name}
                       </Link>
                     </li>
                   ))}

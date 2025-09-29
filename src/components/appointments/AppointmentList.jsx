@@ -1,12 +1,18 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, EyeIcon } from '@heroicons/react/24/outline';
 import AppointmentStatus from './AppointmentStatus';
+import AppointmentDetailModal from './AppointmentDetailModal';
 import Loading from '../common/Loading';
+import Button from '../common/Button';
 import api from '../../api/axios';
 
 export default function AppointmentList() {
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
   const { data: appointments, isLoading, error } = useQuery({
     queryKey: ['appointments'],
     queryFn: async () => {
@@ -14,6 +20,16 @@ export default function AppointmentList() {
       return data.appointments;
     }
   });
+
+  const handleViewDetails = (appointment) => {
+    setSelectedAppointment(appointment);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedAppointment(null);
+    setIsDetailModalOpen(false);
+  };
 
   if (isLoading) return <Loading />;
 
@@ -55,6 +71,9 @@ export default function AppointmentList() {
             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-base-content">
               Estado
             </th>
+            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-base-content">
+              Acciones
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-base-300 bg-base-100">
@@ -90,10 +109,28 @@ export default function AppointmentList() {
               <td className="whitespace-nowrap px-3 py-4 text-sm">
                 <AppointmentStatus appointment={appointment} />
               </td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewDetails(appointment)}
+                  className="flex items-center space-x-1"
+                >
+                  <EyeIcon className="w-4 h-4" />
+                  <span>Ver Detalles</span>
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      
+      {/* Modal de detalles */}
+      <AppointmentDetailModal
+        appointment={selectedAppointment}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }

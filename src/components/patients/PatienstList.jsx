@@ -10,7 +10,7 @@ import Button from '../common/Button';
 import Badge from '../common/Badge';
 import Modal from '../common/Modal';
 import { usePatientReport } from '../../hooks/usePatientReport';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotifications } from '../../hooks/useNotifications';
 import PatientDetail from './PatientDetail';
 
 export default function PatientList() {
@@ -19,7 +19,7 @@ export default function PatientList() {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const { generateReport, loading: reportLoading } = usePatientReport();
   const queryClient = useQueryClient();
-  const { success, error: showError } = useNotification();
+  const { success, error: showError } = useNotifications();
 
   const { data: patients, isLoading, error } = useQuery({
     queryKey: ['patients'],

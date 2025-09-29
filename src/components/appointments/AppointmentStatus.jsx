@@ -5,10 +5,20 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../api/axios';
 
 const statusConfig = {
+  pending: {
+    label: 'Pendiente',
+    className: 'bg-yellow-100 text-yellow-800',
+    icon: ClockIcon
+  },
   scheduled: {
     label: 'Programada',
     className: 'bg-blue-100 text-blue-800',
     icon: ClockIcon
+  },
+  confirmed: {
+    label: 'Confirmada',
+    className: 'bg-blue-100 text-blue-800',
+    icon: CheckIcon
   },
   completed: {
     label: 'Completada',
@@ -17,6 +27,11 @@ const statusConfig = {
   },
   cancelled: {
     label: 'Cancelada',
+    className: 'bg-red-100 text-red-800',
+    icon: XMarkIcon
+  },
+  rejected: {
+    label: 'Rechazada',
     className: 'bg-red-100 text-red-800',
     icon: XMarkIcon
   }
@@ -40,16 +55,39 @@ export default function AppointmentStatus({ appointment }) {
     });
   };
 
-  const CurrentIcon = statusConfig[appointment.status].icon;
+  // Validar que appointment existe y tiene status
+  if (!appointment || !appointment.status) {
+    console.warn('AppointmentStatus: appointment or status is missing', appointment);
+    return (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+        <ClockIcon className="h-4 w-4 mr-1" />
+        Sin estado
+      </span>
+    );
+  }
+
+  // Validar que el status existe en la configuración
+  const statusInfo = statusConfig[appointment.status];
+  if (!statusInfo) {
+    console.warn('AppointmentStatus: unknown status', appointment.status);
+    return (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+        <ClockIcon className="h-4 w-4 mr-1" />
+        {appointment.status || 'Desconocido'}
+      </span>
+    );
+  }
+
+  const CurrentIcon = statusInfo.icon;
 
   return (
     <Menu as="div" className="relative inline-block text-left">
       <Menu.Button className={`
         inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-        ${statusConfig[appointment.status].className}
+        ${statusInfo.className}
       `}>
         <CurrentIcon className="h-4 w-4 mr-1" />
-        {statusConfig[appointment.status].label}
+        {statusInfo.label}
       </Menu.Button>
 
       <Transition
